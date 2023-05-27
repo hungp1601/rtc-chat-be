@@ -1,50 +1,62 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
-import { SharedModule } from './shared/shared.module';
+import { createConnection } from 'mysql2/promise';
+// Entities
+import { User } from './users/entities/users.entity';
 
-import { ConfigurationService } from './shared/configuration/configuration.service';
+const entities = [User];
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    TypeOrmModule.forRoot({
+      type: process.env.DB_TYPE as any,
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT),
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      entities: entities,
+      synchronize: true,
+      createDatabaseIfNotExist: true,
+    }),
     UsersModule,
-    SharedModule,
-    // MongooseModule.forRootAsync({
-    //   useFactory: async (configService: ConfigurationService) => ({
-    //     uri: configService.mongoUri,
-    //     useNewUrlParser: true,
-    //   }),
-    //   inject: [ConfigurationService],
-    // }),
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {
   static port: number | string;
+  static baseUrl: string;
   static isDev: boolean;
 
-  constructor(private readonly _configurationService: ConfigurationService) {
-    AppModule.port = AppModule.normalizePort(_configurationService.port);
-    AppModule.isDev = _configurationService.isDevelopment;
+  async createDatabaseIfNotExists() {
+    const connection = await createConnection({
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT),
+      user: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+    });
+
+    await connection.query(
+      `CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME}`,
+    );
+    await connection.end();
   }
 
-  /**
-   * Normalize port or return an error if port is not valid
-   * @param val The port to normalize
-   */
-  private static normalizePort(val: number | string): number | string {
-    const port: number = typeof val === 'string' ? parseInt(val, 10) : val;
+  constructor() {
+    AppModule.port = process.env.PORT;
+    AppModule.isDev = true;
+    AppModule.baseUrl = process.env.BASE_URL;
 
-    if (Number.isNaN(port)) {
-      return val;
-    }
-
-    if (port >= 0) {
-      return port;
-    }
-
-    throw new Error(`Port "${val}" is invalid.`);
+    this.createDatabaseIfNotExists()
+      .then(() => console.log('Database created or already exists.'))
+      .catch((error) => console.error('Failed to create database:', error));
   }
 }
