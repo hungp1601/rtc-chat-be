@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { createConnection } from 'mysql2/promise';
 // Entities
 import { User } from './users/entities/users.entity';
+import { AuthModule } from './auth/auth.module';
 
 const entities = [User];
 
@@ -27,6 +28,7 @@ const entities = [User];
       createDatabaseIfNotExist: true,
     }),
     UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
