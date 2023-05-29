@@ -35,6 +35,12 @@ export class User extends BaseEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @Column({ nullable: true })
+  resetToken: string;
+
+  @Column({ nullable: true })
+  resetTokenExpiration: Date;
+
   @BeforeInsert()
   async hashPassword(): Promise<void> {
     this.password = await bcrypt.hash(this.password, 8);
