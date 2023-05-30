@@ -1,8 +1,8 @@
 import {
   ConflictException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { User } from '../entities/users.entity';
 import { UserDto } from '../dtos/users.dto';
@@ -21,7 +21,7 @@ export class UsersService {
       if (error.errno === 1062) {
         throw new ConflictException('Username already exists');
       } else {
-        throw new InternalServerErrorException();
+        throw new BadRequestException();
       }
     }
   }
@@ -51,7 +51,7 @@ export class UsersService {
         pageSize,
       };
     } catch (error) {
-      throw new InternalServerErrorException();
+      throw new BadRequestException();
     }
   }
 
@@ -64,7 +64,7 @@ export class UsersService {
       delete user.password;
       return user;
     } catch (error) {
-      throw new InternalServerErrorException();
+      throw new BadRequestException();
     }
   }
 
@@ -77,7 +77,7 @@ export class UsersService {
       delete user.password;
       return user;
     } catch (error) {
-      throw new InternalServerErrorException();
+      throw new BadRequestException();
     }
   }
 
@@ -93,7 +93,7 @@ export class UsersService {
       }
       return user;
     } catch (error) {
-      throw new InternalServerErrorException();
+      throw new BadRequestException();
     }
   }
 
@@ -103,10 +103,9 @@ export class UsersService {
       if (!user) {
         throw new NotFoundException();
       }
-      delete user.password;
       return user;
     } catch (error) {
-      throw new InternalServerErrorException();
+      throw new BadRequestException();
     }
   }
 
@@ -119,7 +118,7 @@ export class UsersService {
       delete user_response.password;
       return user_response;
     } catch (error) {
-      throw new InternalServerErrorException();
+      throw new BadRequestException();
     }
   }
 
@@ -131,7 +130,7 @@ export class UsersService {
       }
       return user;
     } catch (error) {
-      throw new InternalServerErrorException();
+      throw new BadRequestException();
     }
   }
 }

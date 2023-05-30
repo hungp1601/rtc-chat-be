@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/services/users.service';
 import { AuthLoginDto } from '../dto/auth-login.dto';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
+import { ChangePasswordDto } from '../dto/change-password.dto';
 import * as nodemailer from 'nodemailer';
 
 import { User } from 'src/users/entities/users.entity';
@@ -52,25 +53,41 @@ export class AuthService {
     }
   }
 
-  // async changePassword(token: string): {};
+  async changePassword(token: string, changePasswordDto: ChangePasswordDto) {
+    try {
+      const user = await this.usersService.findByResetToken(token);
+      user.password = changePasswordDto.password;
+      await user.save();
+      delete user.password;
+      return user;
+    } catch (err) {
+      throw new BadRequestException();
+    }
+  }
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
-    const { username } = forgotPasswordDto;
-    const user = await this.usersService.findByUsername(username);
+    try {
+      const { username } = forgotPasswordDto;
+      const user = await this.usersService.findByUsername(username);
 
-    if (!user) {
-      throw new Error('User not found');
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const resetToken = this.generateResetToken();
+      const resetTokenExpiration = this.generateResetTokenExpiration(60);
+
+      await this.updateUserResetToken(user, resetToken, resetTokenExpiration);
+      await this.sendResetPasswordEmail(user, resetToken);
+      return {
+        message: 'Email sent',
+      };
+    } catch (err) {
+      throw new BadRequestException();
     }
-
-    const resetToken = this.generateResetToken();
-    const resetTokenExpiration = this.generateResetTokenExpiration();
-
-    await this.updateUserResetToken(user, resetToken, resetTokenExpiration);
-    await this.sendResetPasswordEmail(user, resetToken);
   }
 
   generateResetToken(): string {
-    // Implement your token generation logic here
     const characters =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let token = '';
@@ -84,9 +101,8 @@ export class AuthService {
     return token;
   }
 
-  private generateResetTokenExpiration(): Date {
-    const expire_hours = 1;
-    return new Date(Date.now() + expire_hours * 60 * 60 * 1000); // Token valid for 1 hour
+  private generateResetTokenExpiration(minute: number): Date {
+    return new Date(Date.now() + minute * 60 * 1000);
   }
 
   private async updateUserResetToken(
