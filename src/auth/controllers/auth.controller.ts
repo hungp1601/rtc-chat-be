@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, Param } from '@nestjs/common';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 
 import { AuthService } from '../services/auth.service';
@@ -28,11 +28,15 @@ export class AuthController {
     return 'Hello';
   }
 
-  // @UseGuards(JwtAuthGuard)
-  // @Post('forgot-password')
-  // async forgotPassword(
-  //   @Body() forgotPasswordDto: ForgotPasswordDto,
-  // ): Promise<void> {
-  //   return this.authService.forgotPassword(forgotPasswordDto);
+  @Post('forgot-password')
+  async forgotPassword(
+    @Body() forgotPasswordDto: ForgotPasswordDto,
+  ): Promise<void> {
+    return this.authService.forgotPassword(forgotPasswordDto);
+  }
+
+  // @Post('forgot-password/:token')
+  // async changePassword(@Param('token') token: string): Promise<void> {
+  //   return this.authService.changePassword(token);
   // }
 }

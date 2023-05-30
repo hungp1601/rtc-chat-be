@@ -52,6 +52,8 @@ export class AuthService {
     }
   }
 
+  // async changePassword(token: string): {};
+
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
     const { username } = forgotPasswordDto;
     const user = await this.usersService.findByUsername(username);
@@ -60,45 +62,65 @@ export class AuthService {
       throw new Error('User not found');
     }
 
-    const resetToken = generateResetToken();
-    const resetTokenExpiration = new Date(Date.now() + 3600000); // Token valid for 1 hour
+    const resetToken = this.generateResetToken();
+    const resetTokenExpiration = this.generateResetTokenExpiration();
 
+    await this.updateUserResetToken(user, resetToken, resetTokenExpiration);
+    await this.sendResetPasswordEmail(user, resetToken);
+  }
+
+  generateResetToken(): string {
+    // Implement your token generation logic here
+    const characters =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let token = '';
+    const length = 20;
+
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      token += characters.charAt(randomIndex);
+    }
+
+    return token;
+  }
+
+  private generateResetTokenExpiration(): Date {
+    const expire_hours = 1;
+    return new Date(Date.now() + expire_hours * 60 * 60 * 1000); // Token valid for 1 hour
+  }
+
+  private async updateUserResetToken(
+    user: User,
+    resetToken: string,
+    resetTokenExpiration: Date,
+  ): Promise<void> {
     user.resetToken = resetToken;
     user.resetTokenExpiration = resetTokenExpiration;
-    // await this.userRepository.save(user);
+    await this.usersService.update(user);
+  }
 
+  private async sendResetPasswordEmail(
+    user: User,
+    resetToken: string,
+  ): Promise<void> {
     const transporter = nodemailer.createTransport({
-      // Configure your SMTP details here
-      host: 'smtp.example.com',
-      port: 587,
-      secure: false,
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      secure: process.env.SMTP_SECURE === 'true',
       auth: {
-        user: 'your_email@example.com',
-        pass: 'your_email_password',
+        user: process.env.SMTP_USERNAME,
+        pass: process.env.SMTP_PASSWORD,
       },
     });
 
+    const http = `http://${process.env.BASE_URL}:${process.env.PORT}/reset-password?token=${resetToken}`;
+
     await transporter.sendMail({
-      from: 'your_email@example.com',
+      from: process.env.EMAIL_FROM,
       to: user.username,
       subject: 'Password Reset',
       text: `Please click the following link to reset your password: 
-      http://localhost:3000/reset-password?token=${resetToken}`,
+      ${http}`,
     });
   }
-}
-
-function generateResetToken(): string {
-  // Implement your token generation logic here
-  const characters =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let token = '';
-  const length = 20;
-
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    token += characters.charAt(randomIndex);
-  }
-
-  return token;
 }

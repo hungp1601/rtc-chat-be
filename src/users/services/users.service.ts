@@ -7,6 +7,7 @@ import {
 import { User } from '../entities/users.entity';
 import { UserDto } from '../dtos/users.dto';
 import { PaginationPayload } from 'src/shared/dtos/pagnation.dto';
+import { UserListResponse } from '../dtos/user-list-response.dto';
 
 @Injectable()
 export class UsersService {
@@ -27,50 +28,73 @@ export class UsersService {
 
   async getAllUsers(
     paginationPayload: PaginationPayload,
-  ): Promise<{ users: User[]; total: number }> {
-    const { page = 1, pageSize = 10 } = paginationPayload;
+  ): Promise<UserListResponse> {
+    try {
+      const { page = 1, pageSize = 10 } = paginationPayload;
 
-    const skip = (page - 1) * pageSize;
+      const skip = (page - 1) * pageSize;
 
-    const [users, total] = await User.findAndCount({
-      skip,
-      take: pageSize,
-    });
+      const [users, total] = await User.findAndCount({
+        skip,
+        take: pageSize,
+      });
 
-    const sanitizedUsers = users.map((user: User) => {
-      delete user.password;
-      return user;
-    });
+      const sanitizedUsers = users.map((user: User) => {
+        delete user.password;
+        return user;
+      });
 
-    return {
-      users: sanitizedUsers,
-      total,
-    };
+      return {
+        data: sanitizedUsers,
+        total,
+        page,
+        pageSize,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
   }
 
   async showById(id: number): Promise<User> {
-    const user = await this.findById(id);
-    if (!user) {
-      throw new NotFoundException(`User with ID "${id}" not found`);
+    try {
+      const user = await this.findById(id);
+      if (!user) {
+        throw new NotFoundException(`User with ID "${id}" not found`);
+      }
+      delete user.password;
+      return user;
+    } catch (error) {
+      throw new InternalServerErrorException();
     }
-    delete user.password;
-    return user;
   }
 
   async findById(id: number): Promise<User> {
-    return await User.findOne(id);
+    try {
+      const user = await User.findOne(id);
+      if (!user) {
+        throw new NotFoundException(`User with ID "${id}" not found`);
+      }
+      delete user.password;
+      return user;
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
   }
 
   async findByUsername(username: string): Promise<User> {
-    const user = await User.findOne({
-      where: {
-        username: username,
-      },
-    });
-    if (!user) {
-      throw new NotFoundException();
+    try {
+      const user = await User.findOne({
+        where: {
+          username: username,
+        },
+      });
+      if (!user) {
+        throw new NotFoundException();
+      }
+      return user;
+    } catch (error) {
+      throw new InternalServerErrorException();
     }
-    return user;
   }
 
   async findByResetToken(token: string): Promise<User> {
@@ -94,6 +118,18 @@ export class UsersService {
       }
       delete user_response.password;
       return user_response;
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
+
+  async me(id: number) {
+    try {
+      const user = await this.findById(id);
+      if (!user) {
+        throw new NotFoundException();
+      }
+      return user;
     } catch (error) {
       throw new InternalServerErrorException();
     }

@@ -6,6 +6,7 @@ import {
   Post,
   Query,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 import { UserDto } from '../dtos/users.dto';
@@ -14,16 +15,25 @@ import { PaginationPayload } from 'src/shared/dtos/pagnation.dto';
 import { User } from '../entities/users.entity';
 import { UsersService } from '../services/users.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { UserListResponse } from '../dtos/user-list-response.dto';
 
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @UseGuards(JwtAuthGuard)
+  @Get()
   getAllUsers(
     @Query() paginationPayload: PaginationPayload,
-  ): Promise<{ users: User[]; total: number }> {
+  ): Promise<UserListResponse> {
     return this.usersService.getAllUsers(paginationPayload);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  me(@Request() req) {
+    return this.usersService.me(req.user.UserId);
   }
 
   @Get(':id')
@@ -44,11 +54,5 @@ export class UsersController {
   @Post()
   createUser(@Body() userDto: UserDto) {
     return this.usersService.create(userDto);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('/me')
-  async me() {
-    return 'Hello';
   }
 }
