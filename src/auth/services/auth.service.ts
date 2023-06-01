@@ -12,6 +12,7 @@ import { ChangePasswordDto } from '../dto/change-password.dto';
 import * as nodemailer from 'nodemailer';
 
 import { User } from 'src/users/entities/users.entity';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
@@ -56,7 +57,10 @@ export class AuthService {
   async changePassword(token: string, changePasswordDto: ChangePasswordDto) {
     try {
       const user = await this.usersService.findByResetToken(token);
-      user.password = changePasswordDto.password;
+      user.password = await bcrypt.hash(changePasswordDto.password, 8);
+      user.resetToken = null;
+      user.resetTokenExpiration = null;
+
       await user.save();
       delete user.password;
       return user;
@@ -88,8 +92,7 @@ export class AuthService {
   }
 
   generateResetToken(): string {
-    const characters =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const characters = `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+<>?:{},./[]`;
     let token = '';
     const length = 20;
 
@@ -129,7 +132,7 @@ export class AuthService {
       },
     });
 
-    const http = `http://${process.env.BASE_URL}:${process.env.PORT}/reset-password?token=${resetToken}`;
+    const http = `http://${process.env.BASE_URL}:${process.env.PORT}/reset-password/${resetToken}`;
 
     await transporter.sendMail({
       from: process.env.EMAIL_FROM,
