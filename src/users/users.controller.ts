@@ -20,16 +20,16 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
     type: User,
   },
   routes: {
-    only: ['getManyBase', 'deleteOneBase', 'updateOneBase'],
-    getManyBase: {
-      decorators: [UseGuards(JwtAuthGuard)],
-    },
-    deleteOneBase: {
-      decorators: [UseGuards(JwtAuthGuard)],
-    },
-    updateOneBase: {
-      decorators: [UseGuards(JwtAuthGuard)],
-    },
+    // only: ['getManyBase', 'deleteOneBase', 'updateOneBase'],
+    // getManyBase: {
+    //   decorators: [UseGuards(JwtAuthGuard)],
+    // },
+    // deleteOneBase: {
+    //   decorators: [UseGuards(JwtAuthGuard)],
+    // },
+    // updateOneBase: {
+    //   decorators: [UseGuards(JwtAuthGuard)],
+    // },
   },
 })
 @ApiTags('Users')
