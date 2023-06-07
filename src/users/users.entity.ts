@@ -2,13 +2,19 @@ import {
   BaseEntity,
   Entity,
   BeforeInsert,
+  BeforeUpdate,
   Column,
   CreateDateColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
-import { IsEmail } from 'class-validator';
+import { Exclude } from 'class-transformer';
+
+import { IsEmail, IsOptional, IsDefined } from 'class-validator';
+import { CrudValidationGroups } from '@nestjsx/crud';
+
+const { CREATE, UPDATE } = CrudValidationGroups;
 
 import * as bcrypt from 'bcryptjs';
 
@@ -17,13 +23,16 @@ export class User extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ default: '' })
   fullname: string;
 
+  @IsOptional({ groups: [UPDATE] })
+  @IsDefined({ groups: [CREATE] })
   @Column({ unique: true })
   @IsEmail({}, { message: 'Invalid email address' })
   username: string;
 
+  @Exclude()
   @Column()
   password: string;
 
@@ -42,8 +51,10 @@ export class User extends BaseEntity {
   resetTokenExpiration: Date;
 
   @BeforeInsert()
+  @BeforeUpdate()
   async hashPassword(): Promise<void> {
-    this.password = await bcrypt.hash(this.password, 8);
+    const rounds = 8;
+    this.password = await bcrypt.hash(this.password, rounds);
   }
 
   async validatePassword(password: string): Promise<boolean> {

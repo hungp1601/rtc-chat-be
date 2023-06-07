@@ -5,14 +5,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from 'src/users/services/users.service';
-import { AuthLoginDto } from '../dto/auth-login.dto';
-import { ForgotPasswordDto } from '../dto/forgot-password.dto';
-import { ChangePasswordDto } from '../dto/change-password.dto';
+import { UsersService } from 'src/users/users.service';
+import { AuthLoginDto } from './dto/auth-login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import * as nodemailer from 'nodemailer';
 
-import { User } from 'src/users/entities/users.entity';
-import * as bcrypt from 'bcryptjs';
+import { User } from 'src/users/users.entity';
 
 @Injectable()
 export class AuthService {
@@ -41,13 +40,13 @@ export class AuthService {
 
       const isValidPassword = await user.validatePassword(password);
       if (!isValidPassword) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException('wrong password');
       }
 
       return user;
     } catch (err) {
-      if (err instanceof NotFoundException) {
-        throw new NotFoundException('Not found this user');
+      if (err instanceof UnauthorizedException) {
+        throw new UnauthorizedException('wrong password');
       } else {
         throw new BadRequestException();
       }
@@ -57,7 +56,8 @@ export class AuthService {
   async changePassword(token: string, changePasswordDto: ChangePasswordDto) {
     try {
       const user = await this.usersService.findByResetToken(token);
-      user.password = await bcrypt.hash(changePasswordDto.password, 8);
+
+      user.password = changePasswordDto.password;
       user.resetToken = null;
       user.resetTokenExpiration = null;
 
@@ -78,8 +78,11 @@ export class AuthService {
         throw new Error('User not found');
       }
 
+      const expiredMinutes = 60;
+
       const resetToken = this.generateResetToken();
-      const resetTokenExpiration = this.generateResetTokenExpiration(60);
+      const resetTokenExpiration =
+        this.generateResetTokenExpiration(expiredMinutes);
 
       await this.updateUserResetToken(user, resetToken, resetTokenExpiration);
       await this.sendResetPasswordEmail(user, resetToken);
@@ -92,9 +95,9 @@ export class AuthService {
   }
 
   generateResetToken(): string {
-    const characters = `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+<>?:{},./[]`;
+    const characters = `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`;
     let token = '';
-    const length = 20;
+    const length = 40;
 
     for (let i = 0; i < length; i++) {
       const randomIndex = Math.floor(Math.random() * characters.length);

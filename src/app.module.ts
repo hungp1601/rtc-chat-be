@@ -6,7 +6,7 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { createConnection } from 'mysql2/promise';
 // Entities
-import { User } from './users/entities/users.entity';
+import { User } from './users/users.entity';
 import { AuthModule } from './auth/auth.module';
 
 const entities = [User];
@@ -25,7 +25,6 @@ const entities = [User];
       database: process.env.DB_NAME,
       entities: entities,
       synchronize: true,
-      createDatabaseIfNotExist: true,
     }),
     UsersModule,
     AuthModule,

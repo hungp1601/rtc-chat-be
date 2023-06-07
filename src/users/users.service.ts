@@ -4,55 +4,17 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { User } from '../entities/users.entity';
-import { UserDto } from '../dtos/users.dto';
+import { User } from './users.entity';
+import { UserDto } from './dtos/users.dto';
 import { PaginationPayload } from 'src/shared/dtos/pagnation.dto';
-import { UserListResponse } from '../dtos/user-list-response.dto';
+import { UserListResponse } from './dtos/user-list-response.dto';
+import { TypeOrmCrudService } from '@nestjsx/crud-typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
-export class UsersService {
-  async create(userDto: UserDto): Promise<User> {
-    try {
-      const user = User.create(userDto);
-      await user.save();
-      delete user.password;
-      return user;
-    } catch (error) {
-      if (error.errno === 1062) {
-        throw new ConflictException('Username already exists');
-      } else {
-        throw new BadRequestException();
-      }
-    }
-  }
-
-  async getAllUsers(
-    paginationPayload: PaginationPayload,
-  ): Promise<UserListResponse> {
-    try {
-      const { page = 1, pageSize = 10 } = paginationPayload;
-
-      const skip = (page - 1) * pageSize;
-
-      const [users, total] = await User.findAndCount({
-        skip,
-        take: pageSize,
-      });
-
-      const sanitizedUsers = users.map((user: User) => {
-        delete user.password;
-        return user;
-      });
-
-      return {
-        data: sanitizedUsers,
-        total,
-        page,
-        pageSize,
-      };
-    } catch (error) {
-      throw new BadRequestException();
-    }
+export class UsersService extends TypeOrmCrudService<User> {
+  constructor(@InjectRepository(User) repo) {
+    super(repo);
   }
 
   async showById(id: number): Promise<User> {
@@ -70,7 +32,7 @@ export class UsersService {
 
   async findById(id: number): Promise<User> {
     try {
-      const user = await User.findOne(id);
+      const user = await User.findOne({ where: { id: id } });
       if (!user) {
         throw new NotFoundException(`User with ID "${id}" not found`);
       }

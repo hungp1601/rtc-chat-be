@@ -1,11 +1,11 @@
 import { Body, Controller, Get, Post, UseGuards, Param } from '@nestjs/common';
 import { ApiTags, ApiBody } from '@nestjs/swagger';
 
-import { AuthService } from '../services/auth.service';
-import { AuthLoginDto } from '../dto/auth-login.dto';
-import { ForgotPasswordDto } from '../dto/forgot-password.dto';
-import { ChangePasswordDto } from '../dto/change-password.dto';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { AuthService } from './auth.service';
+import { AuthLoginDto } from './dto/auth-login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -31,7 +31,7 @@ export class AuthController {
 
   @Post('forgot-password')
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
-    // return this.authService.forggotPassword(forgotPasswordDto);
+    return this.authService.forgotPassword(forgotPasswordDto);
   }
 
   @Post('reset-password/:token')
