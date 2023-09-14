@@ -19,18 +19,18 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
   model: {
     type: User,
   },
-  routes: {
-    // only: ['getManyBase', 'deleteOneBase', 'updateOneBase'],
-    // getManyBase: {
-    //   decorators: [UseGuards(JwtAuthGuard)],
-    // },
-    // deleteOneBase: {
-    //   decorators: [UseGuards(JwtAuthGuard)],
-    // },
-    // updateOneBase: {
-    //   decorators: [UseGuards(JwtAuthGuard)],
-    // },
-  },
+  // routes: {
+  //   only: ['getManyBase', 'deleteOneBase', 'updateOneBase'],
+  //   getManyBase: {
+  //     decorators: [UseGuards(JwtAuthGuard)],
+  //   },
+  //   deleteOneBase: {
+  //     decorators: [UseGuards(JwtAuthGuard)],
+  //   },
+  //   updateOneBase: {
+  //     decorators: [UseGuards(JwtAuthGuard)],
+  //   },
+  // },
 })
 @ApiTags('Users')
 @Controller('users')

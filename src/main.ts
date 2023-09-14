@@ -11,7 +11,13 @@ async function bootstrap() {
   const logger = new Logger('Main');
   const globalPrefix = process.env.GLOBAL_PREFIX || 'api';
 
-  app.enableCors();
+  const corsOptions: CorsOptions = {
+    origin: 'http://localhost:4000', // Update with your frontend's URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow the HTTP methods you need
+    credentials: true, // Enable cookies and credentials
+  };
+
+  app.enableCors(corsOptions);
   app.setGlobalPrefix(globalPrefix);
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useGlobalFilters(new HttpExceptionFilter());

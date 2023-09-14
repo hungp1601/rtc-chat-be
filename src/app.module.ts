@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { createConnection } from 'mysql2/promise';
+// import { CorsModule } from '@nestjs/platform-express';
 // Entities
 import { User } from './users/users.entity';
 import { AuthModule } from './auth/auth.module';
